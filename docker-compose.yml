@@ -27,7 +27,11 @@ services:
       TRUSTED_PROXY_CIDR: 172.30.14.2/32
     restart: unless-stopped
     networks:
-      - contact
+      contact:
+        # Fija tambien la de la API: sin esto ambas salen del pool dinamico y la
+        # que arranque primero se lleva la .2 que 'web' reserva, con lo que el
+        # `up` falla y TRUSTED_PROXY_CIDR dejaria de apuntar a nginx.
+        ipv4_address: 172.30.14.3
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
       interval: 30s
