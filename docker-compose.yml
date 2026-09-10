@@ -1,0 +1,40 @@
+services:
+  web:
+    build: .
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    restart: unless-stopped
+    networks:
+      contact:
+        ipv4_address: 172.30.14.2
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    environment:
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_TO: ${SMTP_TO:-araodaniel14@gmail.com}
+      SMTP_SECURITY: ${SMTP_SECURITY:-starttls}
+      TRUSTED_PROXY_CIDR: 172.30.14.2/32
+    restart: unless-stopped
+    networks:
+      - contact
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+networks:
+  contact:
+    ipam:
+      config:
+        - subnet: 172.30.14.0/24
